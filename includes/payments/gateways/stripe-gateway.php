@@ -1,5 +1,5 @@
 <?php
-
+    
 namespace MPHB\Payments\Gateways;
 
 use \MPHB\Admin\Fields;
@@ -14,7 +14,7 @@ use MPHB\Shortcodes\CheckoutShortcode;
  * @since 3.6.0 removed the method checkMinimumAmount() (moved to StripeAPI6).
  * @since 3.6.0 removed the method getMinimumAmount() (moved to StripeAPI6).
  */
-class StripeGateway extends Gateway
+class StripeGateway extends Gateway  
 {
     /** @var string */
     protected $publicKey = '';

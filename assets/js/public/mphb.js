@@ -2260,6 +2260,7 @@ MPHB.StripeGateway = MPHB.Gateway.extend(
         successUrl: window.location.href,
         defaultCountry: '',
         paymentDescription: 'Accommodation(s) reservation',
+        roomtype_id: 'test',
         statementDescriptor: 'Hotel Booking',
         fullAddressRequired: false,
 
@@ -2457,14 +2458,14 @@ MPHB.StripeGateway = MPHB.Gateway.extend(
         },
 
         createPaymentIntent: function (amount, paymentMethodData) {
-            var self = this;
+            var self = this; 
 
             return new Promise(function (resolve, reject) {
 
                 MPHB.post(
                     'create_stripe_payment_intent',
                     {
-                        amount: amount,
+                        amount: amount+'ttttt',
                         description: self.paymentDescription,
                         paymentMethodId: paymentMethodData.paymentMethod.id
                     },
@@ -2476,6 +2477,7 @@ MPHB.StripeGateway = MPHB.Gateway.extend(
                                         id:            response.data.id,
                                         client_secret: response.data.client_secret,
                                         object:        'payment_intent'
+									
                                     };
 
                                     resolve(paymentIntent);

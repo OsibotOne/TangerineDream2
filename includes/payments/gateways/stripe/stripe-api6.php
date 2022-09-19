@@ -7,6 +7,7 @@ use Stripe\PaymentIntent;
 use Stripe\PaymentMethod;
 use Stripe\Source;
 use Stripe\Stripe;
+use Stripe\Transfer;
 
 /**
  * @since 3.6.0
@@ -78,7 +79,7 @@ class StripeAPI6
         // See all currencies presented as links on page
         // https://stripe.com/docs/currencies#presentment-currencies
         switch (strtoupper($currency)) {
-            // Zero decimal currencies
+                // Zero decimal currencies
             case 'BIF':
             case 'CLP':
             case 'DJF':
@@ -120,18 +121,34 @@ class StripeAPI6
             case 'CHF':
             case 'EUR':
             case 'NZD':
-            case 'SGD': $minimumAmount = 0.50; break;
+            case 'SGD':
+                $minimumAmount = 0.50;
+                break;
 
-            case 'DKK': $minimumAmount = 2.50; break;
-            case 'GBP': $minimumAmount = 0.30; break;
-            case 'HKD': $minimumAmount = 4.00; break;
-            case 'JPY': $minimumAmount = 50.00; break;
-            case 'MXN': $minimumAmount = 10.00; break;
+            case 'DKK':
+                $minimumAmount = 2.50;
+                break;
+            case 'GBP':
+                $minimumAmount = 0.30;
+                break;
+            case 'HKD':
+                $minimumAmount = 4.00;
+                break;
+            case 'JPY':
+                $minimumAmount = 50.00;
+                break;
+            case 'MXN':
+                $minimumAmount = 10.00;
+                break;
 
             case 'NOK':
-            case 'SEK': $minimumAmount = 3.00; break;
+            case 'SEK':
+                $minimumAmount = 3.00;
+                break;
 
-            default:    $minimumAmount = 0.50; break;
+            default:
+                $minimumAmount = 0.50;
+                break;
         }
 
         return $minimumAmount;
@@ -171,47 +188,80 @@ class StripeAPI6
      *
      * @return \Stripe\PaymentIntent|\WP_Error
      */
-    public function createPaymentIntent($amount, $description = '', $currency = null, $atts = array(), $paymentMethodId = null)
-    {
+
+
+    public function createPaymentIntent(
+        $amount,
+        $description = '',
+        $currency = null,
+        $atts = array(),
+        $paymentMethodId = null,
+        $room_type_id
+    ) {
+
+        $accPaymentTransfer = get_field('stripe', $room_type_id);
+
         if (is_null($currency)) {
             $currency = MPHB()->settings()->currency()->getCurrencyCode();
         }
 
         $this->setApp();
 
+        //$admin_commistion = get_option( 'admin_commission' );
+        $admin_commission = get_field('admin_commission', $room_type_id);
+
+        $commission = ($admin_commission / 100) * $this->convertToSmallestUnit($amount, $currency);
+
+        $costomer_amount = ($this->convertToSmallestUnit($amount, $currency) - $commission);
+        $totalAmount = $this->convertToSmallestUnit($amount, $currency);
+
+        $CustomerAmount = (round ($costomer_amount));
+
+
         try {
             $requestArgs = array(
-                'amount'               => $this->convertToSmallestUnit($amount, $currency),
-                'currency'             => strtolower($currency),
+                'amount' => $totalAmount,
+                'currency' => 'AUD',
                 'payment_method_types' => array('card')
+            );
+
+            $transfer = array(
+                'amount' =>  $CustomerAmount,
+                'currency' => 'AUD',
+                'destination' => $accPaymentTransfer
             );
 
             if (!empty($description)) {
                 $requestArgs['description'] = $description;
             }
 
-            if( !empty($atts) ) {
-                foreach( $atts as $key => $att ) {
+            if (!empty($atts)) {
+                foreach ($atts as $key => $att) {
                     $additionalAtts[$key] = $att;
                 }
             }
 
-            if(null != $paymentMethodId) {
+            if (null != $paymentMethodId) {
                 $requestArgs['payment_method'] = $paymentMethodId;
             }
 
             // See details in https://stripe.com/docs/api/payment_intents/create
-            if( !empty( $additionalAtts ) ) {
+            if (!empty($additionalAtts)) {
                 $paymentIntent = PaymentIntent::create($requestArgs, $additionalAtts);
+                Transfer::create($transfer);
             } else {
                 $paymentIntent = PaymentIntent::create($requestArgs);
+                Transfer::create($transfer);
             }
+
+
 
             return $paymentIntent;
         } catch (\Exception $e) {
             return new \WP_Error('stripe_api_error', $e->getMessage());
         }
     }
+
 
     /**
      * @param \Stripe\PaymentIntent $paymentIntent
@@ -235,7 +285,7 @@ class StripeAPI6
     {
         $this->setApp();
 
-        try{
+        try {
             $paymentIntent->confirm();
         } catch (\Exception $e) {
             return new \WP_Error('stripe_api_error', $e->getMessage());

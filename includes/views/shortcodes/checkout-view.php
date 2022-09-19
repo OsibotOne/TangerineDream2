@@ -1,8 +1,11 @@
 <?php
 
+
 namespace MPHB\Views\Shortcodes;
 
 use MPHB\Utils\DateUtils;
+
+
 
 /**
  * @todo add actions & filters
@@ -152,6 +155,7 @@ class CheckoutView {
 	 * @param array $roomDetails
 	 */
 	public static function renderBookingDetails( $booking, $roomDetails ){
+
 		?>
 		<section id="mphb-booking-details" class="mphb-booking-details mphb-checkout-section">
 			<h3 class="mphb-booking-details-title">
@@ -171,11 +175,17 @@ class CheckoutView {
      * @since 3.7.0 parameter $roomType became third.
 	 */
 	public static function renderRoomTypeTitle( $reservedRoom, $roomIndex, $roomType ){
+		
 		?>
 		<h3 class="mphb-room-number">
 			<?php echo esc_html( sprintf( __( 'Accommodation #%d', 'motopress-hotel-booking' ), $roomIndex + 1 ) ); ?>
 		</h3>
 		<p class="mphb-room-type-title">
+		<?php 
+         $accomodationType=  get_page_by_title($roomType->getTitle(), OBJECT, 'mphb_room_type');
+		 
+		 
+		?>
 			<span>
 				<?php esc_html_e( 'Accommodation Type:', 'motopress-hotel-booking' ); ?>
 			</span>
@@ -185,7 +195,6 @@ class CheckoutView {
 		</p>
 		<?php
 	}
-
     /**
      * @param \MPHB\Entities\ReservedRoom $reservedRoom
      * @param string $roomIndex
@@ -900,15 +909,24 @@ class CheckoutView {
 	 * @param array $roomDetails
 	 */
 	public static function renderCheckoutForm( $booking, $roomDetails, $customer = null ){
+		
+	$stripe = array(
+    "secret_key" => "sk_test_51LUQxsKTB4cfnGsJxhSoVkTyWFiPR2SfFCUcE9A1eoVhEGHc8Bzgxt9Iz84SYEnNfaA4WBPLmdK9mw4NNIgmV6gT008Hf5y8R7",
+    "publishable_key" => "pk_test_51LUQxsKTB4cfnGsJ3tkmq25GOXLFjAsDm0n4YbYCfjBjOV41HsvF11bghlJ3mfM5NPNGhLamH2cPe2Tm4V7Oou0r00IzaZPpDl",
+	);
+	\Stripe\Stripe::setApiKey($stripe['secret_key']); 
+
 		$actionUrl = add_query_arg( 'step', \MPHB\Shortcodes\CheckoutShortcode::STEP_BOOKING, MPHB()->settings()->pages()->getCheckoutPageUrl() );
 		$checkoutId = mphb_generate_uuid4();
 		$nonceAction = \MPHB\Shortcodes\CheckoutShortcode::NONCE_ACTION_BOOKING . '-' . $checkoutId;
 		?>
 		<form class="mphb_sc_checkout-form" enctype="<?php echo esc_attr( apply_filters('mphb_checkout_form_enctype_data', '') ); ?>" method="POST" action="<?php echo esc_url( $actionUrl ); ?>">
-
+	
+   
+		
 			<?php wp_nonce_field( $nonceAction, \MPHB\Shortcodes\CheckoutShortcode::NONCE_NAME ); ?>
 
-			<input type="hidden"
+			 <input type="hidden"
 				   name="<?php echo esc_attr( \MPHB\Shortcodes\CheckoutShortcode::BOOKING_CID_NAME ); ?>"
 				   value="<?php echo esc_attr( $checkoutId ); ?>"
 				   />
@@ -920,23 +938,21 @@ class CheckoutView {
 				   name="mphb_check_out_date"
 				   value="<?php echo esc_attr( $booking->getCheckOutDate()->format( MPHB()->settings()->dateTime()->getDateTransferFormat() ) ); ?>"
 				   />
-			<input type="hidden"
-				   name="mphb_checkout_step"
-				   value="<?php 
-						// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-				   		echo \MPHB\Shortcodes\CheckoutShortcode::STEP_BOOKING; ?>"
+			<input type="hidden" name="mphb_checkout_step"value="<?php echo \MPHB\Shortcodes\CheckoutShortcode::STEP_BOOKING; ?>"
 				   />
 
 			<?php do_action( 'mphb_sc_checkout_form', $booking, $roomDetails, $customer ); ?>
-			
-			
-
-			<p class="mphb_sc_checkout-submit-wrapper">
-				<input type="submit" class="button" value="<?php esc_attr_e( 'Book Now', 'motopress-hotel-booking' ); ?>"/>
+		
+		  <p class="mphb_sc_checkout-submit-wrapper">
+				<input type="submit"  class="button" value="<?php esc_attr_e( 'Book Now', 'motopress-hotel-booking' ); ?>"/>
 			</p>
+	
 
 		</form>
-		<?php
+	<?php  
+
+	
+
 	}
 
 	public static function _renderCouponCodeParagraphOpen(){
