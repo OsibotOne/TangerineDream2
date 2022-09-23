@@ -196,11 +196,16 @@ class StripeAPI6
         $currency = null,
         $atts = array(),
         $paymentMethodId = null,
-        $room_type_id
+        $room_type_id,
+		$room_type_idBackand	
     ) {
 
+        if($room_type_id !='no'){
         $accPaymentTransfer = get_field('stripe', $room_type_id);
-
+		}else{
+		$accPaymentTransfer = get_field('stripe', $room_type_idBackand);
+		}	
+			
         if (is_null($currency)) {
             $currency = MPHB()->settings()->currency()->getCurrencyCode();
         }
@@ -234,6 +239,7 @@ class StripeAPI6
             if (!empty($description)) {
                 $requestArgs['description'] = $description;
             }
+			
 
             if (!empty($atts)) {
                 foreach ($atts as $key => $att) {

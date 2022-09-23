@@ -673,6 +673,9 @@ class Ajax {
 	
 	public function create_stripe_payment_intent()
 	{
+		//echo 'hello';die;
+			//print_r($_POST);die;
+			
 		$this->verifyNonce( __FUNCTION__ );
 
 		$input = $this->retrieveInput( __FUNCTION__ );
@@ -686,9 +689,15 @@ class Ajax {
 		$amount      = floatval($input['amount']);
 		$description = isset($input['description']) ? mphb_clean($input['description']) : '';
 		$paymentMethodId = isset($input['paymentMethodId']) ? $input['paymentMethodId'] : null;
-		
-
+		$room_type_id = 'no';
+        if(array_key_exists('room_type_id',$input)){
 		$room_type_id = $input['room_type_id']; 
+		}
+		$room_type_idBackand = 'no';
+		 if(array_key_exists('room_type_idBackand',$input)){
+	    $room_type_idBackand = $input['room_type_idBackand'];
+		 }
+		//print_r($room_type_idBackand);die;
 		$currency  = MPHB()->settings()->currency()->getCurrencyCode();
 		$stripeApi = MPHB()->gatewayManager()->getGateway('stripe')->getApi();
 
@@ -703,8 +712,8 @@ class Ajax {
 
 		$idempotencyKey = isset($input['idempotencyKey']) ? $input['idempotencyKey'] : '';
 
-		$response = $stripeApi->createPaymentIntent($amount, $description, $currency, array('idempotency_key' => $idempotencyKey), $paymentMethodId, $room_type_id);
-		
+		$response = $stripeApi->createPaymentIntent($amount, $description, $currency, array('idempotency_key' => $idempotencyKey), $paymentMethodId, $room_type_id , $room_type_idBackand);
+
 
 
 		
